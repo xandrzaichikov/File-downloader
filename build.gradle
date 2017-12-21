@@ -1,8 +1,8 @@
 apply plugin: 'java'
+apply plugin: 'java-library-distribution'
 
-// JDK 7
-//sourceCompatibility = 1.7
-//targetCompatibility = 1.7
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 description = "File Download application"
 
@@ -11,46 +11,24 @@ repositories {
 }
 
 dependencies {
-//    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
     compile group: 'net.sf.jopt-simple', name: 'jopt-simple', version: '5.0.4'
     compile group: 'com.google.guava', name: 'guava', version: '23.0'
 }
 
+distZip.shouldRunAfter(build)
+
 jar {
     archiveName = 'utils.jar'
-    rootSpec.exclude("**/*.properties")
 }
-
-
-/*def getSvnRevision() {
-    new ByteArrayOutputStream().withStream { os ->
-        def result = exec {
-            executable = 'svn'
-            args = ['info']
-            standardOutput = os
-        }
-        def outputAsString = os.toString()
-        def matchLastChangedRev = outputAsString =~ /Last Changed Rev: (\d+)/
-
-        ext.svnRev = "${matchLastChangedRev[0][1]}".toInteger()
-    }
-
-    return svnRev
-} */
 
 jar.doFirst {
     manifest {
-        attributes  \
-    'Implementation-Title': project.description,  \
-    'Implementation-Revision': getSvnRevision(),  \
-    'Built-By': System.getProperty('user.name'),  \
-    'Built-JDK': System.getProperty('java.version'),  \
-    'Build-Time': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        attributes   \
+         'Main-Class': 'test.filedownloader.Main',
+        'Class-Path': configurations.runtime.files.collect { "lib/$it.name" }.join(' ')
     }
 }
 
-
-//tomcat {
-//    httpPort = 8090
-//    contextPath = 'rotator'
-//}
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.2'
+}

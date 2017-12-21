@@ -1,8 +1,5 @@
 package test.filedownloader.io;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,16 +9,8 @@ import com.google.common.util.concurrent.RateLimiter;
 public class ThrottledInputStream extends FilterInputStream {
     private final RateLimiter rateLimiter;
 
-    /**
-     * Constructs an input stream with a maximum throughput
-     *
-     * @param in the backing input stream to read from
-     * @param bytesPerSecond the maximum rate at which this input stream can read
-     * @throws IllegalArgumentException if bytesPerSecond is negative or zero
-     */
     public ThrottledInputStream(final InputStream in, final long bytesPerSecond) {
-        super(checkNotNull(in));
-        checkArgument(bytesPerSecond > 0, "bytesPerSecond must be > 0 [%s]", bytesPerSecond);
+        super(in);
         this.rateLimiter = RateLimiter.create(bytesPerSecond);
     }
 

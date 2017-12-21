@@ -12,33 +12,42 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class FileDownloader implements Callable<Boolean> {
     private String url;
     private List<String> saveToFileList;
     private ExecutorService saveFileService;
     private int bytesInSec;
+    private String outputDirectory;
 
-    public FileDownloader(String url, List<String> saveToFileList, int bytesInSec) {
+    public FileDownloader(String url, List<String> saveToFileList, String outputDirectory, int bytesInSec) {
         this.url = url;
         this.saveToFileList = saveToFileList;
         saveFileService = Executors.newSingleThreadExecutor();
         this.bytesInSec = bytesInSec;
+        this.outputDirectory = outputDirectory;
     }
 
     @Override
     public Boolean call() throws Exception {
         URL urlToDownload = new URL(url);
-        loadFile(urlToDownload, saveToFileList.get(0));
+        loadFile(urlToDownload, saveToFileList);
         return null;
     }
 
-    private void loadFile(URL url, String file) throws IOException, InterruptedException {
+    private void loadFile(URL url, List<String> file) throws IOException, InterruptedException {
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-        try (InputStream in = new ThrottledInputStream(httpConn.getInputStream(), bytesInSec);
-             FileOutputStream fos = new FileOutputStream(new File(file));
-             BufferedOutputStream bos = new BufferedOutputStream(fos);) {
-            System.out.println("reading file...");
+        List<BufferedOutputStream> bosList = saveToFileList.stream()
+                .map((entry) -> {
+                    try {
+                        return new BufferedOutputStream(new FileOutputStream(new File(outputDirectory + entry)));
+                    } catch (FileNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).collect(Collectors.toList());
+        try (InputStream in = new ThrottledInputStream(httpConn.getInputStream(), bytesInSec)) {
+            System.out.printf("start downloading file: %s\r\n", url);
             int length = -1;
             byte[] buffer = new byte[1024];
             long readByteCount = 0;
@@ -46,33 +55,23 @@ public class FileDownloader implements Callable<Boolean> {
             while ((length = in.read(buffer)) > -1) {
                 readByteCount += length;
                 final byte[] writeBuffer = Arrays.copyOf(buffer, length);
-                final int writeLength = length;
-                //final BufferedOutputStream fbos = bos;
-//                Callable<Boolean> write = () -> {
-//                    fbos.write(writeBuffer, 0, writeLength);
-//                    return true;
-//                };
-//                saveFileService.submit(write);
-                WriteTask task = new WriteTask(writeBuffer, writeLength, fos);
-//                saveFileService.submit(()->{
-//                    try {
-//                        fbos.write(writeBuffer, 0, writeLength);
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                });
-//                bos.write(writeBuffer, 0, writeLength);
-
+                WriteTask task = new WriteTask(writeBuffer, length, bosList);
+                saveFileService.submit(task);
             }
             stopwatch.stop();
-//            System.out.printf("download time: %1$.2f", stopwatch.elapsed().);
-            System.out.printf("file: %s was downloaded. Read %d Bytes, load time: %.3f secs\r\n", url,
-                    readByteCount, ((float)stopwatch.elapsed().toMillis() / 1000));
+            System.out.printf("file: %s was downloaded. Read: %d bytes, loading time: %.3f secs\r\n", url,
+                    readByteCount, ((float) stopwatch.elapsed().toMillis() / 1000));
             saveFileService.shutdown();
             while (!saveFileService.awaitTermination(1, TimeUnit.SECONDS)) {
             }
-            bos.flush();
+            for (BufferedOutputStream os : bosList) {
+                os.flush();
+            }
+
         } finally {
+            for (BufferedOutputStream os : bosList) {
+                os.close();
+            }
             httpConn.disconnect();
         }
     }
@@ -81,18 +80,20 @@ public class FileDownloader implements Callable<Boolean> {
     class WriteTask implements Runnable {
         byte[] writeBuffer;
         int writeLength;
-        OutputStream bos;
+        List<BufferedOutputStream> bosList;
 
-        public WriteTask(byte[] writeBuffer, int writeLength, OutputStream bos) {
+        WriteTask(byte[] writeBuffer, int writeLength, List<BufferedOutputStream> bos) {
             this.writeBuffer = writeBuffer;
             this.writeLength = writeLength;
-            this.bos = bos;
+            this.bosList = bos;
         }
 
         @Override
         public void run() {
             try {
-                bos.write(writeBuffer, 0, writeLength);
+                for (BufferedOutputStream os : bosList) {
+                    os.write(writeBuffer, 0, writeLength);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
