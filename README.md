@@ -17,7 +17,7 @@ Change dir to filedownloader.
 command line:<br />
 java -jar utility.jar -n <number_of_threads> -l <download_speed> -o <output_folder> -f <file_with_links_to_download><br />
 example:<br />
-java -jar utils.jar -n 3 -l 200k -o D:/tmp/downloadtmp/ -f D:/resources/file_list.txt<br />
+java -jar utility.jar -n 3 -l 200k -o D:/tmp/downloadtmp/ -f D:/resources/file_list.txt<br />
 
 ## Example of file with links 
 
