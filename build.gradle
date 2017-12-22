@@ -29,6 +29,12 @@ jar.doFirst {
     }
 }
 
+distributions {
+    main{
+        baseName = 'filedownloader'
+    }
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = '4.2'
 }
