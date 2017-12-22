@@ -1,5 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'java-library-distribution'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -14,24 +13,11 @@ dependencies {
     compile group: 'net.sf.jopt-simple', name: 'jopt-simple', version: '5.0.4'
     compile group: 'com.google.guava', name: 'guava', version: '23.0'
 }
-
-distZip.shouldRunAfter(build)
-
 jar {
     archiveName = 'utility.jar'
-}
-
-jar.doFirst {
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     manifest {
-        attributes    \
-          'Main-Class': 'test.filedownloader.Main',
-                'Class-Path': configurations.runtime.files.collect { "lib/$it.name" }.join(' ')
-    }
-}
-
-distributions {
-    main{
-        baseName = 'filedownloader'
+        attributes 'Main-Class': 'test.filedownloader.Main'
     }
 }
 

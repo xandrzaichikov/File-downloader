@@ -3,17 +3,9 @@ Files download utility
 
 ## Project  Build
 gradlew build
-Build zip file in build/distributions/filedownloader.zip (and .tar)
-Unzip file will produce
-
-    
-    ├── filedownloader   #folder
-        ├── lib
-        ├── utility.jar 
-
+Executable jar - ../build/libs/utility.jar
 
 ## Run
-Change dir to filedownloader.
 command line:<br />
 java -jar utility.jar -n <number_of_threads> -l <download_speed> -o <output_folder> -f <file_with_links_to_download><br />
 example:<br />
