@@ -1,0 +1,40 @@
+apply plugin: 'java'
+apply plugin: 'java-library-distribution'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+description = "File Download application"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'net.sf.jopt-simple', name: 'jopt-simple', version: '5.0.4'
+    compile group: 'com.google.guava', name: 'guava', version: '23.0'
+}
+
+distZip.shouldRunAfter(build)
+
+jar {
+    archiveName = 'utility.jar'
+}
+
+jar.doFirst {
+    manifest {
+        attributes    \
+          'Main-Class': 'test.filedownloader.Main',
+                'Class-Path': configurations.runtime.files.collect { "lib/$it.name" }.join(' ')
+    }
+}
+
+distributions {
+    main{
+        baseName = 'filedownloader'
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.2'
+}
