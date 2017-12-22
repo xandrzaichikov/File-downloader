@@ -5,9 +5,9 @@ Files download utility
 gradlew build
 Build zip file in build/distributions/filedownloader.zip (and .tar)
 Unzip file will produce
-|-filedownloader
-  |-lib
-  |-utility.jar 
+├── filedownloader
+    ├── lib
+    ├── utility.jar 
 
 
 ## Run
