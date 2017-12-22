@@ -6,6 +6,8 @@ import joptsimple.OptionSet;
 import test.filedownloader.downloader.DownloadStarter;
 import test.filedownloader.model.Configuration;
 
+import java.io.File;
+
 public class Main {
     private static final String NUMBER = "n";
     private static final String LOAD_RATE = "l";
@@ -15,6 +17,7 @@ public class Main {
 
     public static void main(String[] args) {
         Configuration config = parseCommandLine(args);
+        checkConfig(config);
         DownloadStarter downloadStarter = new DownloadStarter(config);
         downloadStarter.start();
         downloadStarter.shutdown();
@@ -40,6 +43,14 @@ public class Main {
         config.setFile(optionSet.valueOf(file));
         config.setOutputDirectory(optionSet.valueOf(output));
         return config;
+    }
+
+    private static void checkConfig(Configuration config) {
+        File dir = new File(config.getOutputDirectory());
+        if (!dir.exists()) {
+            System.out.printf("directory $s does not exist", config.getOutputDirectory());
+            System.exit(0);
+        }
     }
 
     private static void printHelp() {

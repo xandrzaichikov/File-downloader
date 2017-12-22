@@ -1,10 +1,10 @@
 package test.filedownloader.io;
 
+import com.google.common.util.concurrent.RateLimiter;
+
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import com.google.common.util.concurrent.RateLimiter;
 
 public class ThrottledInputStream extends FilterInputStream {
     private final RateLimiter rateLimiter;
